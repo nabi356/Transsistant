@@ -299,3 +299,197 @@ code, pre, .font-mono {
 .wave-bar:nth-child(3) { animation-delay: 0.3s; background: var(--accent-cyan); }
 .wave-bar:nth-child(4) { animation-delay: 0.45s; background: var(--accent-purple); }
 .wave-bar:nth-child(5) { animation-delay: 0.6s; background: var(--accent-emerald); }
+
+/* ==========================================================================
+   Light Theme Color System (High Contrast & Legible)
+   ========================================================================== */
+[data-theme="light"] {
+  --bg-primary: #f6f8fc;
+  --bg-secondary: #ebf0f8;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(243, 246, 252, 1);
+  --bg-glass: rgba(255, 255, 255, 0.88);
+
+  --border-subtle: rgba(15, 23, 42, 0.12);
+  --border-accent: rgba(2, 132, 199, 0.35);
+  --border-glow: rgba(5, 150, 105, 0.4);
+
+  --accent-cyan: #0284c7;
+  --accent-emerald: #059669;
+  --accent-purple: #7c3aed;
+  --accent-violet: #6d28d9;
+  --accent-amber: #d97706;
+  --accent-rose: #e11d48;
+  --accent-blue: #2563eb;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-accent: #0284c7;
+
+  --glow-cyan: 0 4px 20px rgba(2, 132, 199, 0.14);
+  --glow-emerald: 0 4px 20px rgba(5, 150, 105, 0.14);
+  --glow-purple: 0 4px 20px rgba(124, 58, 237, 0.14);
+  --shadow-card: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: #0f172a;
+}
+
+[data-theme="light"] body::before {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+}
+
+[data-theme="light"] body::after {
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.05) 0%, transparent 70%);
+}
+
+[data-theme="light"] .glass-panel {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="light"] .glass-panel:hover {
+  border-color: rgba(15, 23, 42, 0.22);
+}
+
+[data-theme="light"] .glass-panel-accent {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%);
+  border-color: var(--border-accent);
+  box-shadow: 0 6px 24px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="light"] .btn-secondary {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.25);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ==========================================================================
+   Draggable Resizable Sidebar System
+   ========================================================================== */
+.resizer-handle {
+  width: 8px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.resizer-handle::after {
+  content: '';
+  width: 2px;
+  height: 48px;
+  background: var(--border-subtle);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.resizer-handle:hover::after,
+.resizer-handle.is-resizing::after {
+  background: var(--accent-cyan);
+  height: 90px;
+  width: 4px;
+  box-shadow: 0 0 12px var(--accent-cyan);
+}
+
+/* ==========================================================================
+   Floating Emoji Reactions
+   ========================================================================== */
+@keyframes floatUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.2);
+  }
+  80% {
+    opacity: 0.9;
+    transform: translateY(-160px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-240px) scale(0.8);
+  }
+}
+
+.floating-emoji {
+  position: absolute;
+  pointer-events: none;
+  font-size: 2.2rem;
+  z-index: 100;
+  animation: floatUpFade 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* ==========================================================================
+   Live Classroom Video Tiles & Grid
+   ========================================================================== */
+.video-tile {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000000;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.video-tile.speaking {
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 16px rgba(0, 255, 163, 0.4);
+}
+
+.video-tile.hand-raised {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 18px rgba(255, 183, 3, 0.5);
+}
+
+.tile-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+}
+

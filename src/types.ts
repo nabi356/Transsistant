@@ -63,3 +63,108 @@ export interface EmergencyDispatch {
   vitalDetails: string[];
   timestamp: string;
 }
+
+// User Authentication & Profile
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'student' | 'teacher' | 'interpreter' | 'guest';
+  avatar?: string;
+  preferredSignLang: 'ASL' | 'BSL' | 'ISL';
+}
+
+// Live Classroom / Meeting Session
+export interface MeetingRoom {
+  id: string;
+  code: string;
+  joinLink: string;
+  title: string;
+  hostName: string;
+  startedAt: number;
+  isRecording: boolean;
+}
+
+export interface Participant {
+  id: string;
+  name: string;
+  role: 'student' | 'teacher' | 'interpreter' | 'guest';
+  avatar?: string;
+  isMuted: boolean;
+  isVideoOff: boolean;
+  hasHandRaised: boolean;
+  isSpeaking: boolean;
+}
+
+// Meeting Chat (Common Room Chat and 1-on-1 Personal Chat)
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: 'student' | 'teacher' | 'interpreter' | 'guest';
+  text: string;
+  timestamp: number;
+  isPrivate: boolean;
+  recipientId?: string;
+  recipientName?: string;
+}
+
+// Automated Live Lecture Notes
+export interface AutoNoteItem {
+  id: string;
+  timestamp: number;
+  timeFormatted: string;
+  category: 'topic' | 'keypoint' | 'gloss' | 'action';
+  title: string;
+  content: string;
+  signGlosses?: string[];
+}
+
+// Recorded Classes Library
+export interface RecordedClass {
+  id: string;
+  title: string;
+  instructor: string;
+  date: string;
+  duration: string;
+  tag: string;
+  transcript: {
+    id: string;
+    time: string;
+    seconds: number;
+    speaker: string;
+    text: string;
+    glosses?: string[];
+  }[];
+  notes: AutoNoteItem[];
+}
+
+// Sign Language MNIST Dataset Types
+export interface DatasetSample {
+  sampleId: string;
+  letter: string;
+  label: number;
+  pixels: number[];
+}
+
+export interface DatasetClassifyResult {
+  predictedLetter: string;
+  confidence: number;
+  topPredictions: {
+    letter: string;
+    score: number;
+    description: string;
+  }[];
+  description: string;
+}
+
+export interface DatasetStats {
+  name: string;
+  source: string;
+  totalTrainSamples: number;
+  totalTestSamples: number;
+  classCount: number;
+  letters: string[];
+  letterDescriptions: Record<string, string>;
+}
+

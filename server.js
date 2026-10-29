@@ -12,9 +12,13 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as datasetBackend from './dataset_backend.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Sign Language MNIST Dataset on boot
+datasetBackend.initDataset();
 
 const PORT = process.env.PORT || 3000;
 const NEBIUS_API_KEY = process.env.NEBIUS_API_KEY || '';
@@ -48,10 +52,50 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'healthy',
-      service: 'Transisstant Nebius Gateway',
+      service: 'Transisstant Nebius Gateway & Sign MNIST Engine',
       nebiusConfigured: Boolean(NEBIUS_API_KEY),
+      datasetReady: true,
       timestamp: new Date().toISOString()
     }));
+    return;
+  }
+
+  // Sign Language MNIST Dataset API Endpoints
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  
+  if (parsedUrl.pathname === '/api/dataset/stats' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(datasetBackend.getStats()));
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/dataset/samples' && req.method === 'GET') {
+    const letter = parsedUrl.searchParams.get('letter');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(datasetBackend.getSamples(letter)));
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/dataset/random' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(datasetBackend.getRandomSample()));
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/dataset/classify' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const result = datasetBackend.classifyPixels(payload.pixels);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
     return;
   }
 

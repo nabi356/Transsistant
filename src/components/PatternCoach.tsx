@@ -5,6 +5,7 @@ import { SIGN_CATALOG, evaluateUserSign, HAND_CONNECTIONS, LM } from '../service
 import { SignVisualizer } from './SignVisualizer';
 import { NebiusService } from '../services/nebiusService';
 import { AudioEngine } from '../services/audioEngine';
+import { createHandsInstance, startHandTrackingLoop } from '../services/mediapipeService';
 import type { HandLandmark, CoachingFeedback, SignPattern } from '../types';
 
 export const PatternCoach: React.FC = () => {
@@ -30,8 +31,9 @@ export const PatternCoach: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const matchHoldStartRef = useRef<number>(0);
-  const cameraInstanceRef = useRef<unknown>(null);
-  const handsInstanceRef = useRef<unknown>(null);
+  const handsInstanceRef = useRef<any>(null);
+  const stopLoopRef = useRef<(() => void) | null>(null);
+  const isActiveRef = useRef<boolean>(false);
 
   // Filter catalog by category
   const filteredSigns = selectedCategory === 'All'
@@ -160,52 +162,27 @@ export const PatternCoach: React.FC = () => {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      const windowMp = window as unknown as {
-        Hands?: new (config: { locateFile: (file: string) => string }) => {
-          setOptions: (options: Record<string, unknown>) => void;
-          onResults: (callback: (results: { multiHandLandmarks?: HandLandmark[][] }) => void) => void;
-          send: (data: { image: HTMLVideoElement }) => Promise<void>;
-          close?: () => void;
+        videoRef.current.onloadedmetadata = () => {
+          if (canvasRef.current && videoRef.current) {
+            canvasRef.current.width = videoRef.current.videoWidth || 640;
+            canvasRef.current.height = videoRef.current.videoHeight || 480;
+          }
         };
-        Camera?: new (
-          video: HTMLVideoElement,
-          config: { onFrame: () => Promise<void>; width: number; height: number }
-        ) => { start: () => Promise<void>; stop: () => void };
-      };
-
-      if (windowMp.Hands && windowMp.Camera && videoRef.current) {
-        const hands = new windowMp.Hands({
-          locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-
-        hands.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.65,
-          minTrackingConfidence: 0.6
-        });
-
-        hands.onResults(onResults);
-        handsInstanceRef.current = hands;
-
-        const camera = new windowMp.Camera(videoRef.current, {
-          onFrame: async () => {
-            if (videoRef.current && videoRef.current.readyState >= 2) {
-              await hands.send({ image: videoRef.current });
-            }
-          },
-          width: 640,
-          height: 480
-        });
-
-        await camera.start();
-        cameraInstanceRef.current = camera;
+        try {
+          await videoRef.current.play();
+        } catch (e) {
+          console.warn('PatternCoach play interrupted:', e);
+        }
       }
 
+      isActiveRef.current = true;
       setIsCameraActive(true);
+
+      const hands = await createHandsInstance(onResults);
+      if (hands && videoRef.current && isActiveRef.current) {
+        handsInstanceRef.current = hands;
+        stopLoopRef.current = startHandTrackingLoop(videoRef.current, hands, isActiveRef);
+      }
     } catch (err) {
       console.error(err);
       setCameraError('Camera access required for live gesture feedback.');
@@ -215,12 +192,14 @@ export const PatternCoach: React.FC = () => {
   };
 
   const stopCamera = useCallback(() => {
-    if (cameraInstanceRef.current && typeof (cameraInstanceRef.current as { stop?: () => void }).stop === 'function') {
-      try {
-        (cameraInstanceRef.current as { stop: () => void }).stop();
-      } catch {
-        // Ignored
-      }
+    isActiveRef.current = false;
+    if (stopLoopRef.current) {
+      try { stopLoopRef.current(); } catch {}
+      stopLoopRef.current = null;
+    }
+    if (handsInstanceRef.current?.close) {
+      try { handsInstanceRef.current.close(); } catch {}
+      handsInstanceRef.current = null;
     }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -398,6 +377,7 @@ export const PatternCoach: React.FC = () => {
         >
           <video
             ref={videoRef}
+            autoPlay
             playsInline
             muted
             style={{
